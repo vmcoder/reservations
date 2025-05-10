@@ -38,11 +38,13 @@ public class HotelsController {
 	@GetMapping(path = "/checkAvailability")
 	public Integer checkAvailability(@RequestParam("hotelId") String hotelId,
 			@RequestParam("availabilityDate") String availabilityDate, @RequestParam("roomType") String roomType) {
-		
+		System.out.println("----------");
 		System.out.println("checkAvailability for (hotelId, availabilityDate, roomType) - " + hotelId + ","
 				+ availabilityDate + "," + roomType);
 		
-		return hotelsService.checkAvailability(hotelId, availabilityDate, roomType);
+		Integer availability = hotelsService.checkAvailability(hotelId, availabilityDate, roomType);
+		System.out.println("checkAvailability response :: " + availability);
+		return availability;
 	}
 
 	@GetMapping(path = "/search")

@@ -35,10 +35,22 @@ public class BookingsService {
 		IAvailabilityReponse bookingsResponseForADate = bookingsRepository.findBookingsByDate(hotelId, roomType,
 				arrivalDate);
 
-		System.out.println("Bookings on a Date, in a Hotel given a RoomType, total Rooms available :- " + arrivalDate
+		System.out.println("Bookings on a Date, in a Hotel given a RoomType, total Rooms booked :- " + arrivalDate
 				+ ", " + hotelId + ", " + roomType + ", " + bookingsResponseForADate.getAvailability());
 
 		return bookingsResponseForADate.getAvailability();
+	}
+
+	public Integer findBookingsByDates(String hotelId, String roomType, LocalDate arrivalDate,
+			LocalDate departureDate) {
+		IAvailabilityReponse bookingsResponseForDates = bookingsRepository.findBookingsByDates(hotelId, roomType,
+				arrivalDate, departureDate);
+
+		System.out.println("Bookings on Dates, in a Hotel given a RoomType, total Rooms booked :- " + arrivalDate
+				+ ", " + departureDate + ", " + hotelId + ", " + roomType + ", "
+				+ bookingsResponseForDates.getAvailability());
+
+		return bookingsResponseForDates.getAvailability();
 	}
 
 }

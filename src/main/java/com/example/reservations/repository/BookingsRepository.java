@@ -17,4 +17,10 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
 			+ " from bookings where hotel_id = :hotelId and room_type = :roomType" + " and arrival = :arrivalDate")
 	IAvailabilityReponse findBookingsByDate(@Param("hotelId") String hotelId, @Param("roomType") String roomType,
 			@Param("arrivalDate") LocalDate arrivalDate);
+	
+	@Query(nativeQuery = true, value = "select count(srno) as availability"
+			+ " from bookings where hotel_id = :hotelId and room_type = :roomType"
+			+ " and arrival = :arrivalDate and departure = :departureDate")
+	IAvailabilityReponse findBookingsByDates(@Param("hotelId") String hotelId, @Param("roomType") String roomType,
+			@Param("arrivalDate") LocalDate arrivalDate, @Param("departureDate") LocalDate departureDate);
 }

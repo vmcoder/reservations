@@ -57,17 +57,29 @@ public class HotelsService {
 		System.out.println("In a Hotel given a RoomType, total Rooms available :- " + hotelsData.getHotelId() + ", "
 				+ hotelsData.getRoomType() + ", " + hotelsData.getAvailability());
 		
+		LocalDate arrivalDate;
+		LocalDate departureDate;
+		Integer totalRoomsBooked;
 		//Find Total Rooms Booked
-		LocalDate arrivalDate = LocalDate.parse(availabilityDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
-		
-		Integer totalRoomsBooked = bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
-		
-		//Rooms available - Rooms booked
-		if(null != hotelsData && null != hotelsData.getAvailability()) {
+		if(availabilityDate.contains("-")) {
+			arrivalDate = LocalDate.parse(availabilityDate.substring(0, (availabilityDate.indexOf('-'))),
+					DateTimeFormatter.ofPattern("yyyyMMdd"));
+			
+			departureDate = LocalDate.parse(availabilityDate.substring((availabilityDate.indexOf('-') + 1)),
+					DateTimeFormatter.ofPattern("yyyyMMdd"));
+			
+			totalRoomsBooked = bookingsService.findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
+			
+			//Rooms available - Rooms booked
 			return (hotelsData.getAvailability() - totalRoomsBooked);
 		}
 		
-		return totalRoomsBooked;
+		arrivalDate = LocalDate.parse(availabilityDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
+		
+		totalRoomsBooked = bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
+		
+		//Rooms available - Rooms booked
+		return (hotelsData.getAvailability() - totalRoomsBooked);
 	}
 
 }
