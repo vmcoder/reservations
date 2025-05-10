@@ -1,10 +1,13 @@
 package com.example.reservations.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.reservations.dbresponse.IAvailabilityReponse;
 import com.example.reservations.entity.Hotels;
 import com.example.reservations.entity.RoomTypes;
 import com.example.reservations.entity.Rooms;
@@ -18,6 +21,9 @@ public class HotelsService {
 
 	@Autowired
 	private HotelsRepository hotelsRepository;
+	
+	@Autowired
+	private BookingsService bookingsService;
 
 	public void saveHotels(HotelsJson hotelsJson) {
 		Hotels h = new Hotels();
@@ -43,6 +49,25 @@ public class HotelsService {
 		}
 
 		hotelsRepository.save(h);
+	}
+
+	public Integer checkAvailability(String hotelId, String availabilityDate, String roomType) {
+		//Find Total Rooms available
+		IAvailabilityReponse hotelsData = hotelsRepository.findHotelsByHotelIdAndRoomType(hotelId, roomType);
+		System.out.println("In a Hotel given a RoomType, total Rooms available :- " + hotelsData.getHotelId() + ", "
+				+ hotelsData.getRoomType() + ", " + hotelsData.getAvailability());
+		
+		//Find Total Rooms Booked
+		LocalDate arrivalDate = LocalDate.parse(availabilityDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
+		
+		Integer totalRoomsBooked = bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
+		
+		//Rooms available - Rooms booked
+		if(null != hotelsData && null != hotelsData.getAvailability()) {
+			return (hotelsData.getAvailability() - totalRoomsBooked);
+		}
+		
+		return totalRoomsBooked;
 	}
 
 }

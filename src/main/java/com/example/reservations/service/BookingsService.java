@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.reservations.dbresponse.IAvailabilityReponse;
 import com.example.reservations.entity.Bookings;
 import com.example.reservations.json.BookingsJson;
 import com.example.reservations.repository.BookingsRepository;
@@ -28,6 +29,16 @@ public class BookingsService {
 			bookings.setDeparture(LocalDate.parse(obj.getDeparture(), formatter));
 			bookingsRepository.save(bookings);
 		}
+	}
+
+	public Integer findBookingsByDate(String hotelId, String roomType, LocalDate arrivalDate) {
+		IAvailabilityReponse bookingsResponseForADate = bookingsRepository.findBookingsByDate(hotelId, roomType,
+				arrivalDate);
+
+		System.out.println("Bookings on a Date, in a Hotel given a RoomType, total Rooms available :- " + arrivalDate
+				+ ", " + hotelId + ", " + roomType + ", " + bookingsResponseForADate.getAvailability());
+
+		return bookingsResponseForADate.getAvailability();
 	}
 
 }
