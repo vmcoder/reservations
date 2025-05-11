@@ -36,6 +36,13 @@ public class Bookings {
 		// TODO Auto-generated constructor stub
 	}
 
+	public Bookings(long srno, LocalDate arrival, LocalDate departure) {
+		super();
+		this.srno = srno;
+		this.arrival = arrival;
+		this.departure = departure;
+	}
+
 	public long getSrno() {
 		return srno;
 	}

@@ -2,6 +2,7 @@ package com.example.reservations.service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,14 @@ public class BookingsService {
 				+ bookingsResponseForDates.getAvailability());
 
 		return bookingsResponseForDates.getAvailability();
+	}
+	
+	public List<Bookings> findAllBookingsByDates(String hotelId, String roomType, LocalDate startDate,
+			LocalDate endDate) {
+		List<Bookings> bookingsList = bookingsRepository.findAllBookingsByDates(hotelId, roomType, startDate, endDate);
+		bookingsList.stream().forEach(b -> System.out.println(b.getSrno() + ", " + b.getArrival() + ", " + b.getDeparture()));
+
+		return bookingsList;
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.example.reservations.controllers;
 
+import java.time.LocalDate;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,10 +52,24 @@ public class HotelsController {
 	@GetMapping(path = "/search")
 	public String search(@RequestParam("hotelId") String hotelId, @RequestParam("days") String days,
 			@RequestParam("roomType") String roomType) {
-		System.out.println("search- " + hotelId);
-		System.out.println("search- " + days);
-		System.out.println("search- " + roomType);
+		System.out.println("----------");
+		System.out.println("search for (hotelId, days, roomType) - " + hotelId + "," + days + "," + roomType);
+		
+		// validate days not null.
+		if (null == days)
+			return "Blank Line";
+
+		LocalDate startDate = calculateDate(0);
+		LocalDate endDate = calculateDate(Long.valueOf(days));
+		System.out.println("search for (startDate, endDate) - " + startDate + "," + endDate);
+		System.out.println("----------");
+		hotelsService.findAllDates(hotelId, roomType, startDate, endDate);
 		
 		return "(20240901-20240210,2),(20240901-20240210,2)";
+	}
+	
+	public LocalDate calculateDate(long offset) {
+		LocalDate startDate = LocalDate.now();
+		return startDate.plusDays(offset);
 	}
 }
