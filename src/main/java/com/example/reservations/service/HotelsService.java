@@ -52,34 +52,44 @@ public class HotelsService {
 	}
 
 	public Integer checkAvailability(String hotelId, String availabilityDate, String roomType) {
-		//Find Total Rooms available
-		IAvailabilityReponse hotelsData = hotelsRepository.findHotelsByHotelIdAndRoomType(hotelId, roomType);
-		System.out.println("In a Hotel given a RoomType, total Rooms available :- " + hotelsData.getHotelId() + ", "
-				+ hotelsData.getRoomType() + ", " + hotelsData.getAvailability());
-		
-		LocalDate arrivalDate;
-		LocalDate departureDate;
+		// Find Total Rooms available
+		IAvailabilityReponse hotelsData = findHotelsData(hotelId, roomType);
+
 		Integer totalRoomsBooked;
-		//Find Total Rooms Booked
-		if(availabilityDate.contains("-")) {
-			arrivalDate = LocalDate.parse(availabilityDate.substring(0, (availabilityDate.indexOf('-'))),
-					DateTimeFormatter.ofPattern("yyyyMMdd"));
-			
-			departureDate = LocalDate.parse(availabilityDate.substring((availabilityDate.indexOf('-') + 1)),
-					DateTimeFormatter.ofPattern("yyyyMMdd"));
-			
-			totalRoomsBooked = bookingsService.findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
-			
-			//Rooms available - Rooms booked
+		// Find Total Rooms Booked
+		if (availabilityDate.contains("-")) {
+			totalRoomsBooked = findRoomsBookedForBothDates(hotelId, availabilityDate, roomType);
+
+			// Rooms available - Rooms booked
 			return (hotelsData.getAvailability() - totalRoomsBooked);
 		}
-		
-		arrivalDate = LocalDate.parse(availabilityDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
-		
-		totalRoomsBooked = bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
-		
-		//Rooms available - Rooms booked
+		totalRoomsBooked = findRoomsBookedForSingleDate(hotelId, availabilityDate, roomType);
+
+		// Rooms available - Rooms booked
 		return (hotelsData.getAvailability() - totalRoomsBooked);
 	}
 
+	public IAvailabilityReponse findHotelsData(String hotelId, String roomType) {
+		IAvailabilityReponse hotelsData = hotelsRepository.findHotelsByHotelIdAndRoomType(hotelId, roomType);
+		System.out.println("In a Hotel given a RoomType, total Rooms available :- " + hotelsData.getHotelId() + ", "
+				+ hotelsData.getRoomType() + ", " + hotelsData.getAvailability());
+		return hotelsData;
+	}
+
+	public Integer findRoomsBookedForSingleDate(String hotelId, String availabilityDate, String roomType) {
+		Integer totalRoomsBooked;
+		LocalDate arrivalDate = LocalDate.parse(availabilityDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
+		totalRoomsBooked = bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
+		return totalRoomsBooked;
+	}
+
+	public Integer findRoomsBookedForBothDates(String hotelId, String availabilityDate, String roomType) {
+		Integer totalRoomsBooked;
+		LocalDate arrivalDate = LocalDate.parse(availabilityDate.substring(0, (availabilityDate.indexOf('-'))),
+				DateTimeFormatter.ofPattern("yyyyMMdd"));
+		LocalDate departureDate = LocalDate.parse(availabilityDate.substring((availabilityDate.indexOf('-') + 1)),
+				DateTimeFormatter.ofPattern("yyyyMMdd"));
+		totalRoomsBooked = bookingsService.findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
+		return totalRoomsBooked;
+	}
 }
