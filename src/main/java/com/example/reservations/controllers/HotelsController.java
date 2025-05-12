@@ -1,6 +1,7 @@
 package com.example.reservations.controllers;
 
 import java.time.LocalDate;
+import java.util.LinkedList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.reservations.entity.Bookings;
 import com.example.reservations.json.HotelsJson;
 import com.example.reservations.service.HotelsService;
 
@@ -43,7 +45,7 @@ public class HotelsController {
 		System.out.println("----------");
 		System.out.println("checkAvailability for (hotelId, availabilityDate, roomType) - " + hotelId + ","
 				+ availabilityDate + "," + roomType);
-		
+
 		Integer availability = hotelsService.checkAvailability(hotelId, availabilityDate, roomType);
 		System.out.println("checkAvailability response :: " + availability);
 		return availability;
@@ -54,20 +56,25 @@ public class HotelsController {
 			@RequestParam("roomType") String roomType) {
 		System.out.println("----------");
 		System.out.println("search for (hotelId, days, roomType) - " + hotelId + "," + days + "," + roomType);
-		
+
 		// validate days not null.
 		if (null == days)
 			return "Blank Line";
 
+		// Find current date & (current Date + days)
 		LocalDate startDate = calculateDate(0);
 		LocalDate endDate = calculateDate(Long.valueOf(days));
 		System.out.println("search for (startDate, endDate) - " + startDate + "," + endDate);
 		System.out.println("----------");
-		hotelsService.findAllDates(hotelId, roomType, startDate, endDate);
+
+		// Find all Booking dates between current date & (current Date + days).
+		LinkedList<Bookings> newBookingsList = hotelsService.findAllDates(hotelId, roomType, startDate, endDate);
+		// Search for total rooms available for all dates.
+		hotelsService.checkAvailability(hotelId, newBookingsList, roomType);
 		
-		return "(20240901-20240210,2),(20240901-20240210,2)";
+		return hotelsService.prepareDisplayData(newBookingsList);
 	}
-	
+
 	public LocalDate calculateDate(long offset) {
 		LocalDate startDate = LocalDate.now();
 		return startDate.plusDays(offset);

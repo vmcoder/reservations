@@ -80,27 +80,39 @@ public class HotelsService {
 	}
 
 	public Integer findRoomsBookedForSingleDate(String hotelId, String availabilityDate, String roomType) {
-		Integer totalRoomsBooked;
 		LocalDate arrivalDate = LocalDate.parse(availabilityDate, DateTimeFormatter.ofPattern("yyyyMMdd"));
-		totalRoomsBooked = bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
-		return totalRoomsBooked;
+		return findBookingsByDate(hotelId, roomType, arrivalDate);
 	}
 
 	public Integer findRoomsBookedForBothDates(String hotelId, String availabilityDate, String roomType) {
-		Integer totalRoomsBooked;
 		LocalDate arrivalDate = LocalDate.parse(availabilityDate.substring(0, (availabilityDate.indexOf('-'))),
 				DateTimeFormatter.ofPattern("yyyyMMdd"));
 		LocalDate departureDate = LocalDate.parse(availabilityDate.substring((availabilityDate.indexOf('-') + 1)),
 				DateTimeFormatter.ofPattern("yyyyMMdd"));
-		totalRoomsBooked = bookingsService.findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
-		return totalRoomsBooked;
+		return findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
 	}
 	
-	public void findAllDates(String hotelId, String roomType, LocalDate startDate, LocalDate endDate) {
+	public Integer findBookingsByDate(String hotelId, String roomType, LocalDate arrivalDate) {
+		return bookingsService.findBookingsByDate(hotelId, roomType, arrivalDate);
+	}
+
+	public Integer findBookingsByDates(String hotelId, String roomType, LocalDate arrivalDate,
+			LocalDate departureDate) {
+		return bookingsService.findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
+	}
+	
+	public LinkedList<Bookings> findAllDates(String hotelId, String roomType, LocalDate startDate, LocalDate endDate) {
+		Bookings lastBookings = null;
+		LinkedList<Bookings> newBookingsList = new LinkedList<Bookings>();
+
+		// Find all Booking dates from database, also ADD dates in between, before &
+		// after booking dates.
 		List<Bookings> bookingsList = findAllBookingsByDates(hotelId, roomType, startDate, endDate);
 
-		LinkedList<Bookings> newBookingsList = new LinkedList<Bookings>();
-		Bookings lastBookings = null;
+		if (null != bookingsList && bookingsList.isEmpty()) {
+			newBookingsList.add(new Bookings(-1, startDate, endDate));
+		}
+
 		for (int i = 0; i < bookingsList.size(); i++) {
 			if (i == 0) {
 				newBookingsList.add(new Bookings(-1, startDate, bookingsList.get(i).getArrival().minusDays(1)));
@@ -115,12 +127,39 @@ public class HotelsService {
 			}
 			lastBookings = bookingsList.get(i);
 		}
-		newBookingsList.stream()
-				.forEach(b -> System.out.println( "-> " +b.getSrno() + ", " + b.getArrival() + ", " + b.getDeparture()));
+
+		return newBookingsList;
 	}
 
 	public List<Bookings> findAllBookingsByDates(String hotelId, String roomType, LocalDate startDate,
 			LocalDate endDate) {
 		return bookingsService.findAllBookingsByDates(hotelId, roomType, startDate, endDate);
+	}
+	
+	public void checkAvailability(String hotelId, LinkedList<Bookings> newBookingsList, String roomType) {
+		// Find Total Rooms available
+		IAvailabilityReponse hotelsData = findHotelsData(hotelId, roomType);
+
+		Integer totalRoomsBooked;
+		// Find Total Rooms Booked
+		for (int i = 0; i < newBookingsList.size(); i++) {
+			totalRoomsBooked = findBookingsByDates(hotelId, roomType, newBookingsList.get(i).getArrival(),
+					newBookingsList.get(i).getDeparture());
+
+			newBookingsList.get(i).setSrno(hotelsData.getAvailability() - totalRoomsBooked);
+		}
+	}
+	
+	public String prepareDisplayData(LinkedList<Bookings> newBookingsList) {
+		String displayData = null;
+		StringBuffer strBuf = new StringBuffer();
+		newBookingsList.stream()
+				.forEach(b -> strBuf.append("(" + b.getArrival().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-"
+						+ b.getDeparture().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "," + b.getSrno() + "),"));
+
+		displayData = strBuf.toString().substring(0, strBuf.length() - 1);
+		System.out.println("Search Command :: " + displayData);
+		System.out.println("----------");
+		return displayData;
 	}
 }
