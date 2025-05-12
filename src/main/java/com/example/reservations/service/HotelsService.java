@@ -139,7 +139,7 @@ public class HotelsService {
 		this.checkAvailability(hotelId, newBookingsList, roomType);
 
 		// List of dates with rooms available where non zero rooms available.
-		List<Bookings> finalBookingsList = newBookingsList.stream().filter(b -> (b.getSrno() != 0))
+		List<Bookings> finalBookingsList = newBookingsList.stream().filter(b -> (b.getSrno() > 0))
 				.collect(Collectors.toList());
 
 		return finalBookingsList;
@@ -159,15 +159,28 @@ public class HotelsService {
 
 		for (int i = 0; i < bookingsList.size(); i++) {
 			if (i == 0) {
-				newBookingsList.add(new Bookings(-1, startDate, bookingsList.get(i).getArrival().minusDays(1)));
+				if(!startDate.isEqual(bookingsList.get(i).getArrival())) {
+					newBookingsList.add(new Bookings(-1, startDate, bookingsList.get(i).getArrival().minusDays(1)));
+				}
 				newBookingsList.add(bookingsList.get(i));
 			} else {
-				newBookingsList.add(new Bookings(-1, lastBookings.getDeparture().plusDays(1),
-						bookingsList.get(i).getArrival().minusDays(1)));
-				newBookingsList.add(bookingsList.get(i));
+				//if last date same as current date, bypass it.
+				if (!(lastBookings.getArrival().isEqual(bookingsList.get(i).getArrival())
+						&& (lastBookings.getDeparture().isEqual(bookingsList.get(i).getDeparture())))) {
+					
+					//NEW date created has arrival date lesser than departure date.
+					if(lastBookings.getDeparture().plusDays(1).isBefore(bookingsList.get(i).getArrival().minusDays(1))) {
+						newBookingsList.add(new Bookings(-1, lastBookings.getDeparture().plusDays(1),
+								bookingsList.get(i).getArrival().minusDays(1)));
+					}
+					
+					newBookingsList.add(bookingsList.get(i));
+				}
 			}
 			if (i == (bookingsList.size() - 1)) {
-				newBookingsList.add(new Bookings(-1, bookingsList.get(i).getDeparture().plusDays(1), endDate));
+				if(!endDate.isEqual(bookingsList.get(i).getDeparture())) {
+					newBookingsList.add(new Bookings(-1, bookingsList.get(i).getDeparture().plusDays(1), endDate));
+				}
 			}
 			lastBookings = bookingsList.get(i);
 		}
