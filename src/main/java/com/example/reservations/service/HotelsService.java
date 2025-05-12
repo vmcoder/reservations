@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,13 +23,18 @@ import com.example.reservations.repository.HotelsRepository;
 @Service
 public class HotelsService {
 
-	@Autowired
 	private HotelsRepository hotelsRepository;
-	
-	@Autowired
+
 	private BookingsService bookingsService;
 
-	public void saveHotels(HotelsJson hotelsJson) {
+	@Autowired
+	public HotelsService(HotelsRepository hotelsRepository, BookingsService bookingsService) {
+		super();
+		this.hotelsRepository = hotelsRepository;
+		this.bookingsService = bookingsService;
+	}
+
+	public Hotels saveHotels(HotelsJson hotelsJson) {
 		Hotels h = new Hotels();
 		h.setId(hotelsJson.getId());
 		h.setName(hotelsJson.getName());
@@ -51,10 +57,15 @@ public class HotelsService {
 			h.getRoomsList().add(r);
 		}
 
-		hotelsRepository.save(h);
+		return hotelsRepository.save(h);
 	}
 
 	public Integer checkAvailability(String hotelId, String availabilityDate, String roomType) {
+		System.out.println("----------");
+		System.out.println("checkAvailability for (hotelId, availabilityDate, roomType) :- " + hotelId + ","
+				+ availabilityDate + "," + roomType);
+		Integer availability = 0;
+		
 		// Find Total Rooms available
 		IAvailabilityReponse hotelsData = findHotelsData(hotelId, roomType);
 
@@ -64,12 +75,17 @@ public class HotelsService {
 			totalRoomsBooked = findRoomsBookedForBothDates(hotelId, availabilityDate, roomType);
 
 			// Rooms available - Rooms booked
-			return (hotelsData.getAvailability() - totalRoomsBooked);
+			availability = (hotelsData.getAvailability() - totalRoomsBooked);
+			System.out.println("checkAvailability response :- " + availability);
+			return availability;
 		}
 		totalRoomsBooked = findRoomsBookedForSingleDate(hotelId, availabilityDate, roomType);
 
 		// Rooms available - Rooms booked
-		return (hotelsData.getAvailability() - totalRoomsBooked);
+		availability = (hotelsData.getAvailability() - totalRoomsBooked);
+		
+		System.out.println("checkAvailability response :- " + availability);
+		return availability;
 	}
 
 	public IAvailabilityReponse findHotelsData(String hotelId, String roomType) {
@@ -99,6 +115,34 @@ public class HotelsService {
 	public Integer findBookingsByDates(String hotelId, String roomType, LocalDate arrivalDate,
 			LocalDate departureDate) {
 		return bookingsService.findBookingsByDates(hotelId, roomType, arrivalDate, departureDate);
+	}
+
+	public static LocalDate addToCurrentDate(long days) {
+		LocalDate startDate = LocalDate.now();
+		return startDate.plusDays(days);
+	}
+
+	public List<Bookings> search(String hotelId, String days, String roomType) {
+		System.out.println("----------");
+		System.out.println("search for (hotelId, days, roomType) - " + hotelId + "," + days + "," + roomType);
+
+		// Find current date & (current Date + days)
+		LocalDate startDate = addToCurrentDate(0);
+		LocalDate endDate = addToCurrentDate(Long.valueOf(days));
+		System.out.println("search for (startDate, endDate) - " + startDate + "," + endDate);
+		System.out.println("----------");
+
+		// Find all Booking dates between current date & (current Date + days).
+		LinkedList<Bookings> newBookingsList = this.findAllDates(hotelId, roomType, startDate, endDate);
+
+		// check rooms available from total rooms available of each date.
+		this.checkAvailability(hotelId, newBookingsList, roomType);
+
+		// List of dates with rooms available where non zero rooms available.
+		List<Bookings> finalBookingsList = newBookingsList.stream().filter(b -> (b.getSrno() != 0))
+				.collect(Collectors.toList());
+
+		return finalBookingsList;
 	}
 	
 	public LinkedList<Bookings> findAllDates(String hotelId, String roomType, LocalDate startDate, LocalDate endDate) {
@@ -150,7 +194,7 @@ public class HotelsService {
 		}
 	}
 	
-	public String prepareDisplayData(LinkedList<Bookings> newBookingsList) {
+	public String prepareDisplayData(List<Bookings> newBookingsList) {
 		String displayData = null;
 		StringBuffer strBuf = new StringBuffer();
 		newBookingsList.stream()

@@ -15,21 +15,34 @@ import com.example.reservations.repository.BookingsRepository;
 @Service
 public class BookingsService {
 
-	@Autowired
 	private BookingsRepository bookingsRepository;
 
-	public void saveBookings(BookingsJson[] bookingsJson) {
+	public BookingsService() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	@Autowired
+	public BookingsService(BookingsRepository bookingsRepository) {
+		super();
+		this.bookingsRepository = bookingsRepository;
+	}
+
+	public Bookings[] saveBookings(BookingsJson[] bookingsJson) {
+		Bookings[] bookingsArr = new Bookings[bookingsJson.length];
+
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-		for (BookingsJson obj : bookingsJson) {
+		for (int i = 0; i < bookingsJson.length; i++) {
 			Bookings bookings = new Bookings();
-			bookings.setHotel_Id(obj.getHotelId());
-			bookings.setRoom_rate(obj.getRoomRate());
-			bookings.setRoom_type(obj.getRoomType());
-			bookings.setArrival(LocalDate.parse(obj.getArrival(), formatter));
-			bookings.setDeparture(LocalDate.parse(obj.getDeparture(), formatter));
-			bookingsRepository.save(bookings);
+			bookings.setHotel_Id(bookingsJson[i].getHotelId());
+			bookings.setRoom_rate(bookingsJson[i].getRoomRate());
+			bookings.setRoom_type(bookingsJson[i].getRoomType());
+			bookings.setArrival(LocalDate.parse(bookingsJson[i].getArrival(), formatter));
+			bookings.setDeparture(LocalDate.parse(bookingsJson[i].getDeparture(), formatter));
+			bookingsArr[i] = bookingsRepository.save(bookings);
 		}
+		return bookingsArr;
 	}
 
 	public Integer findBookingsByDate(String hotelId, String roomType, LocalDate arrivalDate) {
